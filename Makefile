@@ -1,4 +1,4 @@
-.PHONY: run test build up down logs stat base form db
+.PHONY: start form stat base
 
 start:
 	@go run ./cmd/api
@@ -10,4 +10,4 @@ stat:
 	git add . && git commit -m "$(msg)" && git push
 
 base:
-	@∏git add . && git commit -m $msg
+	@git add . && git commit -m "$(msg)"
