@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrInvalidLevel = errors.New("invalid log level")
-	ErrNotFound = errors.New("log not found")
+	ErrNotFound     = errors.New("log not found")
 )
 
 type Level string

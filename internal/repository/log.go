@@ -1,10 +1,10 @@
 package repository
 
 import (
-	"fmt"
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 
@@ -21,13 +21,15 @@ type LogsenceRepository struct {
 	db *sqlx.DB
 }
 
+var _ Logsence = (*LogsenceRepository)(nil)
+
 func NewLogRepo(db *sqlx.DB) *LogsenceRepository {
 	return &LogsenceRepository{
 		db: db,
 	}
 }
 
-func(r *LogsenceRepository) Create(ctx context.Context, l *domain.Log) error {
+func (r *LogsenceRepository) Create(ctx context.Context, l *domain.Log) error {
 	const query = `
 	INSERT INTO logs (service, level, message, created_at)
 	VALUES($1, $2, $3, $4)
@@ -37,7 +39,7 @@ func(r *LogsenceRepository) Create(ctx context.Context, l *domain.Log) error {
 		Scan(&l.ID, &l.ReceivedAt)
 }
 
-func(r *LogsenceRepository) GetByID(ctx context.Context, id int64) (*domain.Log, error) {
+func (r *LogsenceRepository) GetByID(ctx context.Context, id int64) (*domain.Log, error) {
 	const query = `
 	SELECT id, service, level, message, created_at, received_at FROM logs WHERE id = $1
 	`
@@ -52,4 +54,18 @@ func(r *LogsenceRepository) GetByID(ctx context.Context, id int64) (*domain.Log,
 		return nil, fmt.Errorf("repository GetByID: %w", err)
 	}
 	return &l, nil
+}
+
+func (r *LogsenceRepository) ListByService(ctx context.Context, service string, limit int) ([]domain.Log, error) {
+	const query = `
+	SELECT id, service, level, message, created_at, received_at FROM logs WHERE service = $1 ORDER BY created_at DESC LIMIT $2`
+
+	var logs []domain.Log
+
+	err := r.db.SelectContext(ctx, &logs, query, service, limit)
+
+	if err != nil {
+		return nil, fmt.Errorf("repository ListByService: %w", err)
+	}
+	return logs, nil
 }
