@@ -8,6 +8,7 @@ import (
 var (
 	ErrInvalidLevel = errors.New("invalid log level")
 	ErrNotFound     = errors.New("log not found")
+	ErrEmptyField   = errors.New("required field is empty")
 )
 
 type Level string
