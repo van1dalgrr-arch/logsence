@@ -19,6 +19,11 @@ type Config struct {
 		Dbname   string `yaml:"dbname"`
 		Sslmode  string `yaml:"sslmode"`
 	} `yaml:"database"`
+
+	Log struct {
+		Level  string `yaml:"level"`
+		Format string `yaml:"format"`
+	} `yaml:"log"`
 }
 
 func Load(path string) (*Config, error) {
