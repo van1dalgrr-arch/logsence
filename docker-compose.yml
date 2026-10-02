@@ -1,3 +1,4 @@
+
 services:
   postgres:
     image: postgres:18
@@ -10,20 +11,21 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
-      - ./migrations/00001_create_logsence_table.sql:/docker-entrypoint-initdb.d/00001_create_logsence_table.sql
+      - ./migrations/00001_create_logs.up.sql:/docker-entrypoint-initdb.d/00001_create_logs.up.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d logsence"]
       interval: 5s
       timeout: 5s
       retries: 5
-    app:
-      build:
-        container_name: logsence-app
-        ports:
-          - "8080:8080"
-        depends_on:
-          - postgres:
-            condition: service_healthy
+
+  app:
+    build: .
+    container_name: logsence_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:
