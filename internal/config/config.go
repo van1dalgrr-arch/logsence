@@ -26,6 +26,11 @@ type Config struct {
 	} `yaml:"log"`
 }
 
+func (c *Config) DSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		c.Database.Host, c.Database.Port, c.Database.User, c.Database.Password, c.Database.Dbname, c.Database.Sslmode)
+}
+
 func Load(path string) (*Config, error) {
 	var cfg Config
 	// Load the config from the specified path
@@ -39,5 +44,8 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	if host := os.Getenv("DB_HOST"); host != "" {
+		cfg.Database.Host = host
+	}
 	return &cfg, nil
 }

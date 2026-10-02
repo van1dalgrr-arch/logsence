@@ -9,16 +9,26 @@ import (
 	"logsence/pkg/loger"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 )
 
 func main() {
 	cfg, err := config.Load("config.yml")
-
 	if err != nil {
 		panic(fmt.Errorf("failed to load conifg: %w", err))
 	}
 
 	lg := loger.New(cfg.Log.Level, cfg.Log.Format)
+
+	db, err := sqlx.Connect("pgx", cfg.DSN())
+	if err != nil {
+		lg.Error("failed to connect to database", "error", err)
+		os.Exit(1)
+	} else {
+		lg.Info("database connected")
+	}
+	defer db.Close()
 
 	r := gin.Default()
 	addr := fmt.Sprintf(":%d", cfg.Http.Port)
@@ -31,5 +41,4 @@ func main() {
 		lg.Error("server failed to start", "error", err)
 		os.Exit(1)
 	}
-
 }
