@@ -44,5 +44,8 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	if host := os.Getenv("DB_HOST"); host != "" {
+		cfg.Database.Host = host
+	}
 	return &cfg, nil
 }
