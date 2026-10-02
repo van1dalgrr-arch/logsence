@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"logsence/internal/config"
 	"logsence/internal/handler"
+	"logsence/pkg/loger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,13 +18,18 @@ func main() {
 		panic(fmt.Errorf("failed to load conifg: %w", err))
 	}
 
+	lg := loger.New(cfg.Log.Level, cfg.Log.Format)
+
 	r := gin.Default()
 	addr := fmt.Sprintf(":%d", cfg.Http.Port)
 
 	r.GET("/handler", handler.Health())
 
+	lg.Info("server started", "addr", addr)
+
 	if err := r.Run(addr); err != nil {
-		log.Fatal("server failed to stop", err)
+		lg.Error("server failed to start", "error", err)
+		os.Exit(1)
 	}
 
 }
