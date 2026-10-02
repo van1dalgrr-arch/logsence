@@ -1,0 +1,10 @@
+http:
+  port: 8080
+
+database:
+  host: localhost
+  port: 5432
+  user:
+  password: logBaseData
+  dbname: logsence
+  sslmode: disable
