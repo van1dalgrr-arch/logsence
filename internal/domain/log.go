@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -36,4 +37,10 @@ type Log struct {
 	Message    string    `json:"message"     db:"message"`
 	CreatedAt  time.Time `json:"created_at"  db:"created_at"`
 	ReceivedAt time.Time `json:"received_at" db:"received_at"`
+}
+
+type LogService interface {
+	Create(ctx context.Context, l *Log) error
+	GetByID(ctx context.Context, id int64) (*Log, error)
+	ListByService(ctx context.Context, service string, limit int) ([]Log, error)
 }
