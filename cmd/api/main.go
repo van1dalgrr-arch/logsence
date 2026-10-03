@@ -8,7 +8,7 @@ import (
 	"logsence/internal/handler"
 	"logsence/internal/repository"
 	"logsence/internal/service"
-	loger "logsence/pkg/logger"
+	"logsence/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -21,7 +21,7 @@ func main() {
 		panic(fmt.Errorf("failed to load conifg: %w", err))
 	}
 
-	lg := loger.New(cfg.Log.Level, cfg.Log.Format)
+	lg := logger.New(cfg.Log.Level, cfg.Log.Format)
 
 	db, err := sqlx.Connect("pgx", cfg.DSN())
 	if err != nil {
