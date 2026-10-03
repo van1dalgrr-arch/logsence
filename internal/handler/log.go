@@ -79,6 +79,23 @@ func (h *LogHandler) GetByID() gin.HandlerFunc {
 
 func (h *LogHandler) ListByService() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: write a ListByService
+		service := c.Query("service")
+
+		limit := 0
+		if limitStr := c.Query("limit"); limitStr != "" {
+			var err error
+			limit, err = strconv.Atoi(limitStr)
+			if err != nil {
+				c.JSON(400, gin.H{"error": "invalid limit"})
+				return
+			}
+		}
+
+		logs, err := h.service.ListByService(c.Request.Context(), service, limit)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, logs)
 	}
 }
