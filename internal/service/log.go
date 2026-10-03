@@ -8,6 +8,8 @@ import (
 	"logsence/internal/repository"
 )
 
+var _ domain.LogService = (*LogService)(nil)
+
 const (
 	defaultLimit = 10
 	maxLimit     = 1000
