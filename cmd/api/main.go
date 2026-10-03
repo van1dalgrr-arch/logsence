@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"logsence/internal/config"
 	"logsence/internal/handler"
@@ -46,8 +52,29 @@ func main() {
 
 	lg.Info("server started", "addr", addr)
 
-	if err := r.Run(addr); err != nil {
-		lg.Error("server failed to start", "error", err)
-		os.Exit(1)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			lg.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	lg.Info("shutting down")
+	if err := srv.Shutdown(ctx); err != nil {
+		lg.Error("graceful shutdown failed", "error", err)
+	}
+	lg.Info("server stopped")
 }
