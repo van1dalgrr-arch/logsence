@@ -6,6 +6,8 @@ import (
 
 	"logsence/internal/config"
 	"logsence/internal/handler"
+	"logsence/internal/repository"
+	"logsence/internal/service"
 	"logsence/pkg/loger"
 
 	"github.com/gin-gonic/gin"
@@ -30,10 +32,17 @@ func main() {
 	}
 	defer db.Close()
 
+	logRepo := repository.NewLogRepo(db)
+	logService := service.NewLogService(logRepo)
+	logHandler := handler.NewLogHandler(logService)
+
 	r := gin.Default()
 	addr := fmt.Sprintf(":%d", cfg.Http.Port)
 
 	r.GET("/handler", handler.Health())
+	r.POST("/logs", logHandler.Create())
+	r.GET("/logs/:id", logHandler.GetByID())
+	r.GET("/logs", logHandler.ListByService())
 
 	lg.Info("server started", "addr", addr)
 
