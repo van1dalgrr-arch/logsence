@@ -1,4 +1,4 @@
-package loger
+package logger
 
 import (
 	"log/slog"
@@ -13,7 +13,7 @@ func New(Level, format string) *slog.Logger {
 		lvl = slog.LevelDebug
 	case "warn":
 		lvl = slog.LevelWarn
-	case "Error":
+	case "error":
 		lvl = slog.LevelError
 	default:
 		lvl = slog.LevelInfo
