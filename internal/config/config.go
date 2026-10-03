@@ -47,5 +47,9 @@ func Load(path string) (*Config, error) {
 	if host := os.Getenv("DB_HOST"); host != "" {
 		cfg.Database.Host = host
 	}
+
+	if password := os.Getenv("DB_PASSWORD"); password != "" {
+		cfg.Database.Password = password
+	}
 	return &cfg, nil
 }
