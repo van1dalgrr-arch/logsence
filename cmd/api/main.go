@@ -18,7 +18,7 @@ import (
 func main() {
 	cfg, err := config.Load("config.yml")
 	if err != nil {
-		panic(fmt.Errorf("failed to load conifg: %w", err))
+		panic(fmt.Errorf("failed to load config: %w", err))
 	}
 
 	lg := logger.New(cfg.Log.Level, cfg.Log.Format)
@@ -39,7 +39,7 @@ func main() {
 	r := gin.Default()
 	addr := fmt.Sprintf(":%d", cfg.Http.Port)
 
-	r.GET("/handler", handler.Health())
+	r.GET("/health", handler.Health())
 	r.POST("/logs", logHandler.Create())
 	r.GET("/logs/:id", logHandler.GetByID())
 	r.GET("/logs", logHandler.ListByService())

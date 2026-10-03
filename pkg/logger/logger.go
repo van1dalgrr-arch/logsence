@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-func New(Level, format string) *slog.Logger {
+func New(level, format string) *slog.Logger {
 	var lvl slog.Level
 
-	switch Level {
+	switch level {
 	case "debug":
 		lvl = slog.LevelDebug
 	case "warn":
