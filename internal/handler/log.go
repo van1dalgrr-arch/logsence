@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"logsence/internal/domain"
@@ -55,5 +56,29 @@ func (h *LogHandler) Create() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusCreated, l)
+	}
+}
+
+func (h *LogHandler) GetByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param("id")
+
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "invalid id"})
+			return
+		}
+		l, err := h.service.GetByID(c.Request.Context(), id)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, l)
+	}
+}
+
+func (h *LogHandler) ListByService() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// TODO: write a ListByService
 	}
 }
