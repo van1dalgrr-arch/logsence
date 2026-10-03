@@ -8,7 +8,7 @@ import (
 	"logsence/internal/handler"
 	"logsence/internal/repository"
 	"logsence/internal/service"
-	"logsence/pkg/loger"
+	loger "logsence/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -34,7 +34,7 @@ func main() {
 
 	logRepo := repository.NewLogRepo(db)
 	logService := service.NewLogService(logRepo)
-	logHandler := handler.NewLogHandler(logService)
+	logHandler := handler.NewLogHandler(logService, lg)
 
 	r := gin.Default()
 	addr := fmt.Sprintf(":%d", cfg.Http.Port)
