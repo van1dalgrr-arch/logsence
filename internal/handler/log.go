@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +14,7 @@ import (
 
 type LogHandler struct {
 	service domain.LogService
+	log     *slog.Logger
 }
 
 type createLogRequest struct {
@@ -22,9 +25,10 @@ type createLogRequest struct {
 }
 
 // Constructor
-func NewLogHandler(service domain.LogService) *LogHandler {
+func NewLogHandler(service domain.LogService, log *slog.Logger) *LogHandler {
 	return &LogHandler{
 		service: service,
+		log:     log,
 	}
 }
 
@@ -50,9 +54,8 @@ func (h *LogHandler) Create() gin.HandlerFunc {
 			Message:   req.Message,
 			CreatedAt: req.CreatedAt,
 		}
-
 		if err := h.service.Create(c.Request.Context(), &l); err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			h.writeError(c, err)
 			return
 		}
 		c.JSON(http.StatusCreated, l)
@@ -70,7 +73,7 @@ func (h *LogHandler) GetByID() gin.HandlerFunc {
 		}
 		l, err := h.service.GetByID(c.Request.Context(), id)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			h.writeError(c, err)
 			return
 		}
 		c.JSON(200, l)
@@ -90,12 +93,28 @@ func (h *LogHandler) ListByService() gin.HandlerFunc {
 				return
 			}
 		}
-
 		logs, err := h.service.ListByService(c.Request.Context(), service, limit)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			h.writeError(c, err)
 			return
 		}
 		c.JSON(200, logs)
+	}
+}
+
+func (h *LogHandler) writeError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, domain.ErrInvalidLevel), errors.Is(err, domain.ErrEmptyField):
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	case errors.Is(err, domain.ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	default:
+		h.log.Error(
+			"request failed",
+			"method", c.Request.Method,
+			"path", c.FullPath(),
+			"error", err,
+		)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 	}
 }

@@ -60,10 +60,9 @@ func (r *LogsenceRepository) ListByService(ctx context.Context, service string, 
 	const query = `
 	SELECT id, service, level, message, created_at, received_at FROM logs WHERE service = $1 ORDER BY created_at DESC LIMIT $2`
 
-	var logs []domain.Log
+	logs := []domain.Log{}
 
 	err := r.db.SelectContext(ctx, &logs, query, service, limit)
-
 	if err != nil {
 		return nil, fmt.Errorf("repository ListByService: %w", err)
 	}

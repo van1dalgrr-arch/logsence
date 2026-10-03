@@ -4,7 +4,7 @@ services:
     container_name: logsence_postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: logBaseData
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: logsence
     ports:
       - "5432:5432"
@@ -27,5 +27,6 @@ services:
         condition: service_healthy
     environment:
       - DB_HOST=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
 volumes:
   pgdata:
