@@ -40,3 +40,32 @@ func Test_EmptyMessage(t *testing.T) {
 		t.Errorf("expected ErrEmptyField, got %v", err)
 	}
 }
+
+func Test_InvalidLevel(t *testing.T) {
+	src := NewLogService(&fakeRepo{})
+
+	l := domain.Log{
+		Service: "api",
+		Message: "test",
+		Level:   "invalid",
+	}
+
+	err := src.Create(t.Context(), &l)
+
+	if !errors.Is(err, domain.ErrInvalidLevel) {
+		t.Errorf("expected ErrInvalidLevel, got %v", err)
+	}
+}
+
+func Test_ListByService(t *testing.T) {
+	src := NewLogService(&fakeRepo{})
+
+	logs, err := src.ListByService(t.Context(), "api", 10)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+
+	if len(logs) != 0 {
+		t.Errorf("expected empty logs, got %v", logs)
+	}
+}
