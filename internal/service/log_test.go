@@ -11,11 +11,13 @@ import (
 
 type fakeRepo struct {
 	gotLimit int
+	gotLog   *domain.Log
 }
 
 var _ repository.Logsence = (*fakeRepo)(nil)
 
 func (f *fakeRepo) Create(ctx context.Context, l *domain.Log) error {
+	f.gotLog = l
 	return nil
 }
 
@@ -99,5 +101,33 @@ func Test_GetByID_InvalidId(t *testing.T) {
 		t.Errorf("expected error, got nil")
 	} else if !errors.Is(err, domain.ErrNotFound) {
 		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func Test_Create(t *testing.T) {
+	fake := &fakeRepo{}
+	src := NewLogService(fake)
+
+	l := domain.Log{
+		Service: "api",
+		Message: "test",
+		Level:   domain.LevelInfo,
+	}
+
+	err := src.Create(t.Context(), &l)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+
+	if fake.gotLog == nil {
+		t.Fatalf("expected log to be created, got nil")
+	}
+
+	if fake.gotLog.CreatedAt.IsZero() {
+		t.Errorf("expected log to have a created_at time, got zero")
+	}
+
+	if fake.gotLog.Service != l.Service || fake.gotLog.Message != l.Message || fake.gotLog.Level != l.Level {
+		t.Errorf("expected log to be created with correct values, got %v", fake.gotLog)
 	}
 }
