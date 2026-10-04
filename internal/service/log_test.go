@@ -9,7 +9,9 @@ import (
 	"logsence/internal/repository"
 )
 
-type fakeRepo struct{}
+type fakeRepo struct {
+	gotLimit int
+}
 
 var _ repository.Logsence = (*fakeRepo)(nil)
 
@@ -21,7 +23,8 @@ func (f *fakeRepo) GetByID(ctx context.Context, id int64) (*domain.Log, error) {
 	return nil, nil
 }
 
-func (f *fakeRepo) ListByService(ctx context.Context, service string, limimt int) ([]domain.Log, error) {
+func (f *fakeRepo) ListByService(ctx context.Context, service string, limit int) ([]domain.Log, error) {
+	f.gotLimit = limit
 	return nil, nil
 }
 
@@ -57,15 +60,24 @@ func Test_InvalidLevel(t *testing.T) {
 	}
 }
 
-func Test_ListByService(t *testing.T) {
-	src := NewLogService(&fakeRepo{})
+func Test_ListByService_DefaultLimit(t *testing.T) {
+	fake := &fakeRepo{}
+	src := NewLogService(fake)
 
-	logs, err := src.ListByService(t.Context(), "api", 10)
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
+	_, _ = src.ListByService(t.Context(), "api", 0)
+
+	if fake.gotLimit != defaultLimit {
+		t.Errorf("expected default limit 10, got %v", fake.gotLimit)
 	}
+}
 
-	if len(logs) != 0 {
-		t.Errorf("expected empty logs, got %v", logs)
+func Test_ListByService_MaxLimit(t *testing.T) {
+	fake := &fakeRepo{}
+	src := NewLogService(fake)
+
+	_, _ = src.ListByService(t.Context(), "api", 100000)
+
+	if fake.gotLimit != maxLimit {
+		t.Errorf("expected max limit 1000, got %v", fake.gotLimit)
 	}
 }

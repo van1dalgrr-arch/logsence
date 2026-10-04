@@ -27,6 +27,7 @@ help:
 	@echo "  clogs   - логи приложения"
 	@echo "  db      - консоль postgres (psql)"
 	@echo "  reset   - удалить всё вместе с данными базы"
+	@echo "  test    - запустить тесты кода через go test ./..."
 
 # go
 start:
@@ -76,3 +77,7 @@ db:
 
 reset:
 	@docker compose down -v
+
+
+test:
+	@go test ./...
