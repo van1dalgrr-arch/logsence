@@ -81,3 +81,23 @@ func Test_ListByService_MaxLimit(t *testing.T) {
 		t.Errorf("expected max limit 1000, got %v", fake.gotLimit)
 	}
 }
+
+func Test_GetByID_InvalidId(t *testing.T) {
+	fake := &fakeRepo{}
+	src := NewLogService(fake)
+
+	l := domain.Log{
+		ID:      -1,
+		Service: "api",
+		Message: "test",
+		Level:   domain.LevelInfo,
+	}
+
+	_, err := src.GetByID(t.Context(), l.ID)
+
+	if err == nil {
+		t.Errorf("expected error, got nil")
+	} else if !errors.Is(err, domain.ErrNotFound) {
+		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
