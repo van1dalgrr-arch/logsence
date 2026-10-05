@@ -1,0 +1,100 @@
+# CI: на каждый push в main и на каждый pull request GitHub запускает эти проверки
+# на своих серверах. Если что-то упало — у коммита красный крестик, у PR — нельзя не заметить.
+#
+# Четыре задачи (jobs) идут ПАРАЛЛЕЛЬНО, каждая на чистой виртуалке ubuntu:
+#   test    — форматирование, go vet, тесты с race-детектором и покрытием
+#   lint    — golangci-lint (тот же, что у тебя в Zed и `gol`)
+#   vuln    — govulncheck: известные уязвимости в зависимостях, которые код реально вызывает
+#   docker  — hadolint (линтер Dockerfile) + сборка образа (без публикации)
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# новый push в ту же ветку отменяет ещё идущий прогон — не ждём устаревший
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# по умолчанию у токена CI только чтение репозитория — ничего лишнего
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # скачать код репозитория на виртуалку
+      - uses: actions/checkout@v7
+
+      # поставить Go той версии, что в go.mod (одно место правды), с кэшем модулей
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      # gofmt -l печатает файлы, которые НЕ отформатированы; если список не пуст — падаем
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "не отформатировано (make form):"; echo "$unformatted"; exit 1
+          fi
+
+      # go vet — встроенный анализатор: подозрительный код, который компилируется, но вероятно ошибочен
+      - name: go vet
+        run: go vet ./...
+
+      # -race ловит гонки данных между горутинами; -coverprofile — какой код покрыт тестами
+      - name: go test
+        run: go test -race -coverprofile=coverage.out ./...
+
+      # итог покрытия — в сводку прогона на странице Actions
+      - name: coverage
+        run: |
+          echo "### Покрытие тестами" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          go tool cover -func=coverage.out | tail -1 >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # версия линтера закреплена — новые правила не уронят CI внезапно
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14.0
+
+  vuln:
+    runs-on: ubuntu-latest
+    steps:
+      # экшен сам делает checkout и ставит Go
+      - uses: golang/govulncheck-action@v1
+        with:
+          go-version-file: go.mod
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # падаем на warning и выше; info (советы) только показываются
+      - uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+      # buildx + кэш слоёв в GitHub: повторные сборки идут за секунды
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: logsence:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
