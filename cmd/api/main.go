@@ -36,7 +36,11 @@ func main() {
 	} else {
 		lg.Info("database connected")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			lg.Error("failed to close database", "error", err)
+		}
+	}()
 
 	logRepo := repository.NewLogRepo(db)
 	logService := service.NewLogService(logRepo)
