@@ -27,6 +27,10 @@ func main() {
 		panic(fmt.Errorf("failed to load config: %w", err))
 	}
 
+	if err := cfg.Validate(); err != nil {
+		panic(fmt.Errorf("invalid config: %w", err))
+	}
+
 	lg := logger.New(cfg.Log.Level, cfg.Log.Format)
 
 	db, err := sqlx.Connect("pgx", cfg.DSN())
@@ -49,7 +53,7 @@ func main() {
 	r := gin.Default()
 	addr := fmt.Sprintf(":%d", cfg.Http.Port)
 
-	r.GET("/health", handler.Health())
+	r.GET("/health", handler.Health(db))
 	r.POST("/logs", logHandler.Create())
 	r.GET("/logs/:id", logHandler.GetByID())
 	r.GET("/logs", logHandler.ListByService())
