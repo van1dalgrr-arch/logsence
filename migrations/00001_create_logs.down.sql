@@ -1,1 +1,1 @@
-DROP TABLE logs;
+DROP TABLE IF EXISTS logs;
