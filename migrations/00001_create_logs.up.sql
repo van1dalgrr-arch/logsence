@@ -1,4 +1,4 @@
-CREATE TABLE logs (
+CREATE TABLE IF NOT EXISTS logs (
     id BIGSERIAL PRIMARY KEY,
     service TEXT NOT NULL,
     level TEXT NOT NULL,

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -32,8 +33,16 @@ func NewLogHandler(service domain.LogService, log *slog.Logger) *LogHandler {
 	}
 }
 
-func Health() gin.HandlerFunc {
+type Ping interface {
+	PingContext(ctx context.Context) error
+}
+
+func Health(db Ping) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if err := db.PingContext(c.Request.Context()); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(200, gin.H{
 			"message": "server is healthy",
 		})
