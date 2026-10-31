@@ -1,8 +1,13 @@
 APP := logsence
 
+# пароль берём из .env, чтобы не хранить его в Makefile
+-include .env
+DB_URL ?= postgres://postgres:$(DB_PASSWORD)@localhost:5432/$(APP)?sslmode=disable
+
 .PHONY: help start form stat base \
         build dock in logs stop \
-        up down ps clogs db reset
+        up down ps clogs db reset \
+        migrate-up migrate-down migrate-new
 
 help:
 	@echo "Go:"
@@ -28,6 +33,11 @@ help:
 	@echo "  db      - консоль postgres (psql)"
 	@echo "  reset   - удалить всё вместе с данными базы"
 	@echo "  test    - запустить тесты кода через go test ./..."
+	@echo ""
+	@echo "Migrations:"
+	@echo "  migrate-up    - применить все новые миграции"
+	@echo "  migrate-down  - откатить одну последнюю"
+	@echo "  migrate-new   - создать пару файлов (make migrate-new name=add_x)"
 
 # go
 start:
@@ -81,3 +91,14 @@ reset:
 
 test:
 	@go test ./...
+
+# Migrations
+migrate-up:
+	@migrate -path migrations -database "$(DB_URL)" up
+
+migrate-down:
+	@migrate -path migrations -database "$(DB_URL)" down 1
+
+migrate-new:
+	@test -n "$(name)" || (echo "укажи имя: make migrate-new name=add_x" && exit 1)
+	@migrate create -ext sql -dir migrations -seq -digits 5 $(name)

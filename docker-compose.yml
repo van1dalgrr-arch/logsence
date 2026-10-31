@@ -10,7 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
-      - ./migrations/00001_create_logs.up.sql:/docker-entrypoint-initdb.d/00001_create_logs.up.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d logsence"]
       interval: 5s
