@@ -35,17 +35,17 @@ func main() {
 
 	db, err := sqlx.Connect("pgx", cfg.DSN())
 	if err != nil {
-		lg.Error("failed to connect to database", "error", err)
+		lg.Error("failed connect to database")
 		os.Exit(1)
-	} else {
-		lg.Info("database connected")
 	}
+
 	defer func() {
 		if err := db.Close(); err != nil {
 			lg.Error("failed to close database", "error", err)
+		} else {
+			lg.Info("database closed")
 		}
 	}()
-
 	logRepo := repository.NewLogRepo(db)
 	logService := service.NewLogService(logRepo)
 	logHandler := handler.NewLogHandler(logService, lg)
